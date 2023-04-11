@@ -1,0 +1,263 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    background-color: #000000;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: black;
+    color: #D4AF37;
+    padding: 10px;
+  }
+  
+  nav ul {
+    display: flex;
+    list-style: none;
+  }
+  
+  nav li {
+    margin-right: 20px;
+  }
+  
+  nav a {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  main {
+    flex-wrap: wrap;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  #blog {
+    flex-basis: 70%;
+  }
+  
+  article {
+    background-color: rgb(0, 0, 0);
+    padding: 10px;
+  }
+
+  article img{
+    width: 100%;
+  }
+  
+  article h1 {
+    font-size: 30px;
+    margin-bottom: 10px;
+    color: #dbc373;
+  }
+  article h2 {
+    font-size: 25px;
+    margin-bottom: 10px;
+    color: #dbc373;
+  }
+  article h3  {
+    font-size: 18px;
+    list-style: none;
+    margin-bottom: 10px;
+    color: #e0d1a0;
+    text-indent: 2em;
+  }
+  article h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: #e0d1a063;
+    list-style: none;
+  }
+  article h5  {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #e0d1a0;
+  }
+  article h6  {
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: #c0b38a;
+    text-indent: 2em;
+  }
+  hr {
+    border: none;
+    height: 1px;
+    background-color: #e0d1a0;
+    margin-bottom: 20px;
+  }
+  article p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  
+  article a {
+    display: inline-block;
+    padding: 5px 10px;
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  aside {
+    flex-basis: 25%;
+    background-color: #000000;
+    color: #D4AF37	;
+  }
+  
+  aside h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  
+  aside p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  
+  aside ul {
+    list-style: none;
+    margin-bottom: 20px;
+  }
+  
+  aside li {
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+  
+  aside a {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: rgb(0, 0, 0);
+    color: #fff;
+    text-decoration: none;
+  }
+  .profile {
+    color : gold;
+    background-color: rgb(0, 0, 0);
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center; /* จัดให้ภาพและข้อความตรงกลางแนวตั้ง */
+    gap: 10px; /* ระยะห่างระหว่างภาพและข้อความ */
+    white-space: nowrap; /* ป้องกันการตัดบรรทัด */
+
+
+  }
+  
+  .profile img {
+    display: block;
+    margin: 10px;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  .profile-img{
+    width: 100px; /* กำหนดขนาดของภาพ */
+    height: 100px;
+    border-radius: 20%;
+  }
+  
+  .profile p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-left: 30px;
+    color: white;
+  }
+  
+  .profile ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .profile li {
+    margin-right: 10px;
+  }
+  
+  .profile a {
+    color: #fff;
+    text-align: center;
+    line-height: 30px;
+    border-radius: 50%;
+    text-decoration: none;
+  }
+  .social-media-icon img{
+    width: 50px; /* กำหนดขนาดของภาพ */
+    height: 50px;
+    margin: left 50px;
+  }
+  .social-media{
+    border-left: 1px solid #e0d1a0;
+  }
+  .social-text{
+    color: #D4AF37;
+  }
+  
+/* Set the background color of the code block */
+pre {
+    background-color: rgb(39, 39, 39);
+    border-radius: 50px;
+    color: #abb2bf;
+    padding: 10px;
+    font-size: 14px;
+    margin:5px;
+    word-wrap: break-word;
+    padding: 20px; /* Add padding for readability */
+  }
+  
+  /* Style the code block text */
+  code {
+    font-family: Consolas, Menlo, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #abb2bf;
+    position: relative;
+    right: 80px;
+    display: block;
+    margin: 0;
+    padding: 10px;
+  }
+
+  .social-media-icon{
+    padding : 30px;
+  }
+ 
+  
+  
+  /* Style specific elements of the code block */
+  code.python .hljs-comment {
+    color: #5c6370;
+    font-style: italic;
+  }
+  code.python .hljs-keyword {
+    color: #c678dd;
+  }
+  code.python .hljs-string {
+    color: #98c379;
+  }
+  code.python .hljs-number {
+    color: #d19a66;
+  }
+  code.python .hljs-built_in {
+    color: #56b6c2;
+  }
+  .code-btn{
+    background-color: #000000;
+    margin-bottom: 10px;
+    position: relative;
+    left: 850px;
+  }
+  
+  .imgoutput{
+    background-color: white;
+    margin-bottom: 20px;
+  }

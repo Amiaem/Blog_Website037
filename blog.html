@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Blog</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="copycode.js"></script>
+</head>
+<body>
+  <header>
+    <h1>My Blog</h1>
+    <nav>
+        <ul>
+          
+        </ul>
+      </nav>
+  </header>
+  <main>
+    <section id="blog">
+      <article>
+        <p>
+            <h1>การทำนายราคาทองคำโดยใช้ Python</h1>
+            <h6>เขียนโดย Ishan Shah และ Rekhit Pachanekar | แปลและอธิบายเพิ่มโดย อันติกา อำนรรฆสรเดช</h6>
+            <img src="gold.jpg" alt="gold_price">
+        </p>
+        <h2>
+            เป็นไปได้หรือไม่ที่เราจะทำนายราคาทองคำล่วงหน้า?
+        </h2>
+        <h3>
+            แน่นอน เราสามารถใช้เทคนิค regression ของ machine learning มาใช้ในการทำนายราคาโลหะที่มีค่าสูงสุดหนึ่งในโลก นั่นก็คือ ทองคำ
+            <li> โดยเราจะสร้างโมเดล linear regression ของ machine learning ที่ใช้ข้อมูลราคาของ Gold ETF(GLD) ในอดีตเพื่อทำนายราคาทองคำในวันถัดไป</li>
+        </h3>
+        <h4>*GLD เป็น ETF ที่ใหญ่ที่สุดในการลงทุนโดยตรงเกี่ยวกับทองคำ
+          <li>
+            *ETF หรือ Exchange Traded Fund คือ กองทุนรวมดัชนี
+          </li>
+        </h4>
+        <h2>ในการพยายามทำนายราคาทองคำด้วย machine learning ด้วยภาษา Python เราจะครอบคลุมหัวข้อดังต่อไปนี้</h2>
+        <h5>
+          <li>เราจะเรียกใช้งานไลบรารีต่างๆที่จำเป็นสำหรับการสร้างโมเดล machine learning และอ่านข้อมูล Gold ETF จากแหล่งข้อมูลที่เราเลือก</li>
+          <li>เราจะกำหนดตัวแปรที่อธิบายได้ว่ามีผลต่อราคาของ Gold ETF ในแต่ละวัน เช่น ราคาเปิด,ราคาปิด,ปริมาณการซื้อขาย ฯลฯ</li>
+          <li>เราจะกำหนดตัวแปรที่ต้องการทำนาย ซึ่งในที่นี้คือราคา Gold ETF ในวันถัดไป</li>
+          <li>เราจะแบ่งข้อมูล Gold ETF เป็นชุดข้อมูลสำหรับการฝึกโมเดล(training set) และชุดข้อมูลสำหรับทดสอบโมเดล(testing set) เพื่อวัดประสิทธิภาพของโมเดล</li>
+          <li>เราจะสร้างโมเดล linear regression ที่ใช้ตัวแปรอธิบายเพื่อทำนายราคา Gold ETF ในวันถัดไป</li>
+          <li>เราจะใช้โมเดลที่สร้างขึ้นมาเพื่อทำนายราคา Gold ETF ในวันถัดไป</li>
+          <li>เราจะพล็อตกราฟของผลตอบแทนสะสมจากการซื้อขาย Gold ETF ตามเวลา</li>
+        </h5>
+        <hr>
+        <h2>นำเข้าไลบรารีและอ่านข้อมูล Gold ETF</h2>
+        <h3>เริ่มต้นด้วยการ import libraries ทั้งหมดที่จำเป็นต้องใช้ในการประมวลผลวิธีนี้</h3>
+        <h6> 
+         <li>จาก sklearn นำเข้า LinearRegression เพื่อใช้ในการสร้างโมเดล Linear Regression</li>
+         <li>นำเข้า pandas และ numpy เพื่อใช้ในการจัดการข้อมูล</li>
+         <li>นำเข้า matplotlib และ seaborn เพื่อใช้ในการพล็อตกราฟ</li> 
+         <li>ใช้ yfinance เพื่อดึงข้อมูลการซื้อขายหุ้น Gold ETF จากเว็บไซต์ Yahoo Finance</li>
+        </h6>
+            <pre><code id="code1" class="python">
+                # LinearRegression is a machine learning library for linear regression
+                from sklearn.linear_model import LinearRegression
+            
+                # pandas and numpy are used for data manipulation
+                import pandas as pd
+                import numpy as np
+            
+                # matplotlib and seaborn are used for plotting graphs
+                import matplotlib.pyplot as plt
+                %matplotlib inline
+                plt.style.use('seaborn-darkgrid')
+            
+                # yahoo finance is used to fetch data
+                import yfinance as yf
+              </code></pre>
+          <button class="code-btn" data-code="#code1"><img src="copy.png" alt="copy1"></button>
+          <h3>หลังจากนั้นเราอ่านข้อมูลราคา Gold ETF รายวันของ 12 ปีที่ผ่านมาและเก็บไว้ในตัวแปร Df โดยเอาคอลัมน์ที่ไม่เกี่ยวข้องออก 
+            และตัดแถวที่มีค่า NaN ออกด้วยฟังก์ชัน dropna() จากนั้น plot ราคาปิดของ Gold ETF</h3>
+            <h6>
+              <li>
+                ดึงข้อมูลราคา Gold ETF ตั้งแต่วันที่ 1 มกราคม 2008 ถึง 22 มิถุนายน 2020 จากเว็บไซต์ Yahoo Finance ด้วยฟังก์ชั่น 
+                yf.download() จากนั้นก็เลือกเฉพาะคอลัมน์ที่เกี่ยวข้องกับราคาปิด (Close) 
+                และลบแถวที่มี missing values ออกด้วยฟังก์ชั่น dropna() เพื่อเตรียมข้อมูลสำหรับการวิเคราะห์ต่อไป 
+                จากนั้นก็พล็อตกราฟแสดงการเปลี่ยนแปลงราคาปิดของ Gold ETF ในช่วงเวลาที่ถูกดึงมา โดยใช้ Df.Close.plot() 
+                และกำหนดตัวแปรที่จำเป็นเช่น ylabel() เพื่อกำหนดชื่อแกน Y และ title() เพื่อกำหนดชื่อกราฟ และใช้ plt.show() 
+                เพื่อแสดงผลกราฟที่สร้างขึ้น
+              </li>
+            </h6>
+          <pre><code id="code2" class="python">
+            # Read data
+            Df = yf.download('GLD', '2008-01-01', '2020-6-22', auto_adjust=True)
+
+            # Only keep close columns
+            Df = Df[['Close']]
+
+            # Drop rows with missing values
+            Df = Df.dropna()
+
+            # Plot the closing price of GLD
+            Df.Close.plot(figsize=(10, 7),color='r')
+            plt.ylabel("Gold ETF Prices")
+            plt.title("Gold ETF Price Series")
+            plt.show()
+          </code></pre>
+          <button class="code-btn" data-code="#code2"><img src="copy.png" alt="copy2"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output1.png" alt="output1">
+          <hr>
+          <h2>กำหนดตัวแปรอิสระ</h2>
+          <h3>
+            <li>ตัวแปรอิสระ คือตัวแปรที่ถูกกำหนดค่าเพื่อใช้กำหนดราคา Gold ETF ในวันถัดไป โดยตัวแปรเหล่านี้จะเป็นสิ่งที่เราต้องการใช้ในการพยากรณ์ราคา Gold ETF </li>
+            <li>ตัวแปรออิสระในกลยุทธ์นี้คือเครื่องหมายเคลื่อนที่สำหรับวันก่อนหน้า 3 วันและ 9 วัน โดยเราจะลบค่า NaN โดยใช้ฟังก์ชั่น dropna() และเก็บตัวแปรคุณลักษณะไว้ใน X</li>
+            <li>อย่างไรก็ตาม คุณสามารถเพิ่มตัวแปรเข้าไปใน X ได้อีกต่างหาก ซึ่งตัวแปรเหล่านี้อาจเป็นตัวชี้วัดเทคนิค ราคาของ ETF อื่น ๆ เช่น Gold miners ETF (GDX) หรือ Oil ETF (USO) 
+              หรือข้อมูลเศรษฐกิจของสหรัฐอเมริกา โดยใช้ข้อมูลเหล่านี้ในการพยากรณ์ราคา Gold ETF
+            </li>
+          </h3>
+          <hr>
+          <h2>กำหนดตัวแปรตาม</h2>
+          <h3>เช่นเดียวกับนั้น ตัวแปรตามกฎหมายอยู่ในขึ้นอยู่กับค่าของตัวแปรอธิบาย กล่าวคือ 
+            เป็นคุณสมบัติที่เราต้องการใช้ในการทำนายราคา Gold ETF วันถัดไป 
+            <li>ในกลยุทธ์นี้ ตัวแปรตามคือราคา Gold ETF ที่เราพยายามทำนาย โดยเก็บไว้ในตัวแปร y</li>
+          </h3>
+          <h6>
+            <li> โค้ดดังกล่าวเป็นการกำหนดตัวแปรอิสระหรือ "explanatory variables" ที่ใช้ในการทำนายราคา Gold ETF ในวันถัดไป 
+              โดยตัวแปรอิสระที่ใช้เป็นตัวบอกถึงแนวโน้มราคาของ Gold ETF คือ moving average ของราคาในช่วง 3 วันและ 9 วัน โดยจะใช้ค่าเฉลี่ยของราคา (Close) ในการคำนวณ นอกจากนี้ยังมีตัวแปรอิสระอีก 1 ตัวที่เรียกว่า next_day_price ซึ่งจะเป็นราคา Gold ETF ในวันถัดไป และนำไปใช้ในการทำนาย
+            </li>
+            <li>หลังจากกำหนดตัวแปรอิสระและตัวแปรตามฟังก์ชั่นของ Pandas ในการคำนวณ จะทำการลบข้อมูลที่มีค่า NaN ออกจาก Df และเก็บข้อมูลตัวแปรอิสระที่จะนำมาใช้ในการสร้างโมเดล ในตัวแปร X ซึ่งเป็น DataFrame ที่มีคอลัมน์ S_3 และ S_9 ซึ่งเป็นค่าเฉลี่ยราคาในช่วง 3 วันและ 9 วัน ในขณะเดียวกัน 
+              ราคา Gold ETF ในวันถัดไปที่เป็นตัวแปรตามฟังก์ชั่นจะถูกเก็บไว้ในตัวแปรตามฟังก์ชั่น y ซึ่งเป็น Series ของ Pandas
+            </li>
+          </h6>
+          <pre><code id="code3" class="python">
+            # Define explanatory variables
+            Df['S_3'] = Df['Close'].rolling(window=3).mean()
+            Df['S_9'] = Df['Close'].rolling(window=9).mean()
+            Df['next_day_price'] = Df['Close'].shift(-1)
+
+            Df = Df.dropna()
+            X = Df[['S_3', 'S_9']]
+
+            # Define dependent variable
+            y = Df['next_day_price']
+          </code></pre>
+          <button class="code-btn" data-code="#code3"><img src="copy.png" alt="copy3"></button>
+          <hr>
+          <h2>การแบ่งข้อมูลเป็นชุดฝึกฝนและชุดทดสอบ</h2>
+          <h3> ในขั้นตอนนี้ เราจะแบ่งข้อมูลตัวคาดหมายและผลลัพธ์เป็นชุดข้อมูล train และ test โดยชุดข้อมูล train จะถูกใช้สร้างโมเดลเชิงเส้น โดยจับคู่ข้อมูลนำเข้ากับผลลัพธ์ที่คาดหวัง
+            <li>ส่วนชุดข้อมูล test จะถูกใช้เพื่อประเมินว่าโมเดลได้ถูกฝึกฝนอย่างไร</li>
+          </h3>
+          <img src="eximg01.jpg" alt="eximg01">
+          <h5>1.ข้อมูล 80% แรกใช้สำหรับการฝึกอบรมและข้อมูลที่เหลือสำหรับการทดสอบ
+              <br> 2.X_train & y_train เป็นชุดข้อมูลการฝึก 
+              <br> 3.X_test & y_test เป็นชุดข้อมูลทดสอบ
+          </h5>
+          <h6>
+            <li> แบ่งข้อมูลออกเป็น 2 ชุดคือ train dataset และ test dataset เพื่อนำไปใช้ในการสร้างและทดสอบโมเดล โดยเราจะใช้ข้อมูลที่มีอยู่ทั้งหมด 80% ของข้อมูลเป็น train dataset และ 20% ของข้อมูลเป็น test dataset 
+                  โดยการแบ่งจะใช้คำสั่ง slice ข้อมูลด้วยตัวแปร t ซึ่งเป็นตัวแปรที่เก็บค่าเท่ากับ 80% ของจำนวนแถวของ DataFrame Df และแบ่งข้อมูล X และ y ออกเป็น X_train, y_train สำหรับ train dataset และ X_test, y_test สำหรับ test dataset
+            </li>
+          </h6>
+          <pre><code id="code4" class="python">
+            # Split the data into train and test dataset
+            t = .8
+            t = int(t*len(Df))
+
+            # Train dataset
+            X_train = X[:t]
+            y_train = y[:t]
+
+            # Test dataset
+            X_test = X[t:]
+            y_test = y[t:]
+          </code></pre>
+          <button class="code-btn" data-code="#code4"><img src="copy.png" alt="copy4"></button>
+          <hr>
+          <h2>สร้างโมเดล linear regression</h2>
+          <h5>เราจะสร้างโมเดลเชิงเส้น (linear regression model) ต่อไปนี้ แต่นั้น โมเดลเชิงเส้นคืออะไร?</h5>
+          <h3>หากเราพยายามจับความสัมพันธ์ทางคณิตศาสตร์ระหว่างตัวแปร 'x' และ 'y' ที่ "ดีที่สุด" เพื่ออธิบายค่า 'y' ที่เห็นได้ในสิ่งที่สังเกตเห็นของ 'x' ที่สังเกตเห็น โดยการปรับเส้นตรงผ่านกราฟกระจาย (scatter plot) ดังกล่าว จะได้สมการระหว่าง x และ y 
+            ที่เรียกว่าการวิเคราะห์เชิงเส้น (linear regression analysis)
+          </h3>
+          <img src="eximg02.jpg" alt="eximg02">
+          <h3>เพื่อให้ง่ายต่อการเข้าใจ หลังจากที่แบ่งแยกข้อมูลออกเป็นชุด Train และ Test เราจะสร้างโมเดล Linear Regression เพื่อใช้ในการทำนาย
+
+           <li> โมเดล Linear Regression นั้นเป็นการอธิบายความสัมพันธ์ของตัวแปรต้นและตัวแปรตาม โดยมีตัวแปรต้นเป็นตัวแปรอิสระ (Independent Variable) ซึ่งจะถูกนำมาใช้ในการทำนายตัวแปรตาม 
+                (Dependent Variable) ดังนั้น เราจะใช้โมเดล Linear Regression 
+                เพื่ออธิบายความสัมพันธ์ระหว่างตัวแปรอิสระ (X) และตัวแปรตาม (y) โดยสามารถแสดงความสัมพันธ์ในรูปแบบสมการเชิงเส้นได้ดังนี้:
+           </li>
+          </h3>
+          <h5>
+           <li>Y = m1 * X1 + m2 * X2 + C</li> 
+           <li>Gold ETF price = m1 * 3 days moving average + m2 * 15 days moving average + c</li> 
+          </h5>
+          <h3>จากนั้นเราใช้เมธอด fit เพื่อหาค่าตัวปรับและค่าคงที่ในการสร้างโมเดลเชิงเส้น โดยใช้ตัวแปรอิสระและตัวแปรตาม (x และ y) ในการฝึกฝนโมเดลเชิงเส้น และเพื่อสร้างจุดตัดแกน y หรือค่าคงที่ของสมการเส้นตรง และค่าตัวปรับ (coefficient) 
+            ของแต่ละตัวแปรอิสระ ซึ่งใช้ในการทำนายผลของตัวแปรตาม (y) ที่เราสนใจ
+          </h3>
+          <h6>
+            <li>
+              สร้างโมเดล Linear Regression โดยใช้ข้อมูล X_train และ y_train เพื่อสร้างโมเดลที่ใช้ในการทำนาย Gold ETF Price (y) จากข้อมูลเฉลี่ยเคลื่อนที่ของราคาใน 3 วัน (x1) และ 9 วัน (x2) โดยใช้วิธี fit ซึ่งจะสร้าง coefficient และ constant ของโมเดล Linear Regression ที่เหมาะสมกับข้อมูลที่มีอยู่
+            </li>
+            <li>
+              ส่วน print statement ที่ใช้พิมพ์ค่า coefficient และ constant ที่ได้จากโมเดล Linear Regression นั้นอธิบายว่า การทำนาย Gold ETF Price (y) จะขึ้นอยู่กับข้อมูลเฉลี่ยเคลื่อนที่ของราคาใน 3 วัน (x1) และ 9 วัน (x2) โดยมีค่า coefficient ของ x1 และ x2 คือ %.2f และ %.2f ตามลำดับ และมีค่าคงที่ (constant) 
+              คือ %.2f ดังที่ได้จากโมเดล Linear Regression นี้ 
+            </li>
+          </h6>
+          <pre><code id="code5" class="python">
+            # Create a linear regression model
+            linear = LinearRegression().fit(X_train, y_train)
+            print("Linear Regression model")
+            print("Gold ETF Price (y) = %.2f * 3 Days Moving Average (x1) \
+            + %.2f * 9 Days Moving Average (x2) \
+            + %.2f (constant)" % (linear.coef_[0], linear.coef_[1], linear.intercept_))
+          </code></pre>
+          <button class="code-btn" data-code="#code5"><img src="copy.png" alt="copy5"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output2.jpg" alt="output2">
+          <hr>
+          <h2>ทำนายราคา Gold ETF</h2>
+          <h3>ตอนนี้เราจะตรวจสอบว่าโมเดลทำงานได้ดีในชุดข้อมูลการทดสอบหรือไม่ โดยเราจะใช้โมเดลเชิงเส้นที่สร้างขึ้นโดยใช้ชุดข้อมูลการฝึกฝนในการทำนายราคา Gold ETF และใช้เมธอด predict 
+            เพื่อค้นหาราคา Gold ETF (y) สำหรับตัวแปรต้น X ที่กำหนด
+          </h3>
+          <h6>
+            <li>
+              ทำนายราคา Gold ETF โดยใช้โมเดล Linear Regression ที่สร้างขึ้นจาก train dataset แล้วนำไปใช้ทำนายผลใน test dataset  
+            </li> 
+            <li>
+              โดยใช้ฟังก์ชัน predict() ที่จะคำนวณหาราคา Gold ETF จากตัวแปรต้นที่กำหนด (3 Days Moving Average และ 9 Days Moving Average) ซึ่งจะได้ผลลัพธ์มาเป็น predicted_price จากนั้นทำการ plot กราฟเปรียบเทียบ actual_price และ predicted_price เพื่อดูความแม่นยำของโมเดล และใช้ฟังก์ชัน score() เพื่อคำนวณค่าความแม่นยำของโมเดล
+            </li>
+            <li>
+              โดยค่า score() จะอยู่ในช่วง 0 ถึง 1 ซึ่งค่ามากก็แสดงว่าโมเดลมีความแม่นยำสูง ส่วนค่าเท่ากับ 1 แสดงว่าโมเดลถูกต้องทุกเหตุการณ์
+            </li>
+          </h6>
+          <pre><code id="code6" class="python">
+            # Predicting the Gold ETF prices
+            predicted_price = linear.predict(X_test)
+            predicted_price = pd.DataFrame(
+              predicted_price, index=y_test.index, columns=['price'])
+            predicted_price.plot(figsize=(10, 7))
+            y_test.plot()
+            plt.legend(['predicted_price', 'actual_price'])
+            plt.ylabel("Gold ETF Price")
+            plt.show()
+          </code></pre>
+          <button class="code-btn" data-code="#code6"><img src="copy.png" alt="copy6"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output3.png" alt="output3">
+          <h3>กราฟแสดงราคาทองคำ ETF ที่พยายามทำนาย พร้อมกับราคาจริงในช่วงเวลาทดสอบ (test dataset)
+            <li>ต่อมาเราจะคำนวณคุณภาพการตัดสินใจของโมเดล โดยใช้ฟังก์ชัน score()</li> 
+          </h3>
+          <h6>
+            <li>
+              คำนวณค่า R squared ซึ่งเป็นค่าวัดประสิทธิภาพของโมเดลที่ถูกสร้างขึ้น โดยใช้ชุดข้อมูลทดสอบ (test dataset) 
+            </li>
+            <li>
+              โดยการเปรียบเทียบค่าที่โมเดลทำนายได้กับค่าจริง โดยค่า R squared จะอยู่ในช่วง 0-100% โดยที่ค่าสูงสุดคือ 100% และหมายถึงโมเดลที่สามารถอธิบายตัวแปรตามที่เกิดขึ้นได้เต็มที่ โมเดลที่ไม่สามารถอธิบายตัวแปรได้จะให้ค่า R squared เท่ากับ 0 
+            </li>
+            <li>
+              ดังนั้น ค่า R squared ที่สูงก็แปลว่าโมเดลนั้นสามารถอธิบายการเปลี่ยนแปลงของตัวแปรตามที่เกิดขึ้นได้ดีกว่า
+            </li>
+            <li>
+              ดังนั้นโค้ดด้านบนนี้คำนวณค่า R squared ของโมเดลโดยใช้ชุดข้อมูลทดสอบ และนำเลขทศนิยม 2 ตำแหน่งของค่าที่คำนวณได้ในการแสดงผล
+            </li>
+          </h6>
+          <pre><code id="code7" class="python">
+            # R square
+            r2_score = linear.score(X[t:], y[t:])*100
+            float("{0:.2f}".format(r2_score))
+          </code></pre>
+          <button class="code-btn" data-code="#code7"><img src="copy.png" alt="copy7"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output4.jpg" alt="output4">
+          <h4>*ในส่วนของoutputนี้มีการนำcodeไปรันในcolabเพื่อดูว่าcodeรันได้หรือไม่ทำให้ค่าอาจจะมีการคาดเคลื่อนจากบทความต้นฉบับ</h4>
+          <h3>ในผลลัพธ์ที่แสดงให้เห็น ค่า R-squared ของโมเดลคือ 98.85% ซึ่งแสดงให้เห็นว่าโมเดลอธิบายราคา Gold ETF ได้ดีมาก เนื่องจากค่า R-squared 
+            จะอยู่ระหว่าง 0 ถึง 100% เมื่อมีค่าใกล้เคียงกับ 100% จะแสดงว่าโมเดลอธิบายข้อมูลได้ดีอย่างมาก
+          </h3>
+          <hr>
+          <h2>การพล็อตสะสมผลตอบแทน</h2>
+          <h5>เราจะคำนวณผลตอบแทนสะสมของกลยุทธ์นี้เพื่อวิเคราะห์ประสิทธิภาพ</h5>
+           <h3>
+            1.ขั้นตอนในการคำนวณผลตอบแทนสะสมคือดังนี้:
+            <li>2.สร้างรายการเปลี่ยนแปลงราคาทองคำรายวัน</li>
+            <li>3.สร้างสัญญาณการซื้อแทนด้วย "1" เมื่อราคาที่คาดการณ์ได้ของวันถัดไปมากกว่า
+             <li>ราคาที่คาดการณ์ได้ในวันนั้น ไม่มีการเปิดตำแหน่งในกรณีอื่น</li> </li>
+            <li>4.คำนวณผลตอบแทนของกลยุทธ์โดยการคูณเปอร์เซ็นต์เปลี่ยนแปลงราคารายวัน
+             <li>กับสัญญาณการซื้อ</li> </li>
+            <li>5.คำนวณผลตอบแทนของกลยุทธ์โดยคูณเปอร์เซ็นต์การเปลี่ยนแปลงราคารายวัน
+              <li>กับสัญญาซื้อขาย</li></li>
+            <li>6.สุดท้ายเราจะพล็อตกราฟผลตอบแทนสะสม</li>
+          </h3>
+          <h6>
+            เรียกใช้ DataFrame ชื่อ gold โดยมีคอลัมน์ดังนี้
+            <li>price: ราคาทองคำประจำวัน</li>
+            <li>predicted_price_next_day: ราคาทองคำที่ทำนายได้สำหรับวันถัดไป</li>
+            <li>actual_price_next_day: ราคาทองคำจริงของวันถัดไป</li>
+            <li>gold_returns: เปอร์เซ็นต์เปลี่ยนแปลงราคาทองคำประจำวัน
+            <li>signal: สัญญาณการซื้อขาย มีค่าเท่ากับ 1 เมื่อราคาทองคำที่ทำนายได้สำหรับวันถัดไปมากกว่าราคาทองคำประจำวัน</li>
+            <li>strategy_returns: ผลตอบแทนของกลยุทธ์การซื้อขาย คำนวณโดยคูณ gold_returns กับ signal</li>
+            เมื่อได้รับผลตอบแทนของกลยุทธ์การซื้อขายแล้ว โค้ดนี้ใช้ ((gold['strategy_returns']+1).cumprod()).plot() เพื่อพล็อตกราฟ cumulative returns ของกลยุทธ์นี้ ที่แสดงผลตอบแทนสะสมของกลยุทธ์ในช่วงเวลาที่กำหนด
+          </h6>
+          <pre><code id="code8" class="python">
+            gold = pd.DataFrame()
+
+            gold['price'] = Df[t:]['Close']
+            gold['predicted_price_next_day'] = predicted_price
+            gold['actual_price_next_day'] = y_test
+            gold['gold_returns'] = gold['price'].pct_change().shift(-1)
+
+            gold['signal'] = np.where(gold.predicted_price_next_day.shift(1) < gold.predicted_price_next_day,1,0)
+
+            gold['strategy_returns'] = gold.signal * gold['gold_returns']
+            ((gold['strategy_returns']+1).cumprod()).plot(figsize=(10,7),color='g')
+            plt.ylabel('Cumulative Returns')
+            plt.show()
+          </code></pre>
+          <button class="code-btn" data-code="#code8"><img src="copy.png" alt="copy8"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output5.png" alt="output5">
+          <h3>เราจะคำนวณอัตราส่วนระหว่างกำไรและความเสี่ยงของการลงทุนด้วย</h3>
+          <pre><code id="code9" class="python">
+            # Calculate sharpe ratio
+            sharpe = gold['strategy_returns'].mean()/gold['strategy_returns'].std()*(252**0.5)
+            'Sharpe Ratio %.2f' % (sharpe)
+          </code></pre>
+          <button class="code-btn" data-code="#code9"><img src="copy.png" alt="copy9"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output6.jpg" alt="output">
+          <h4>*ในส่วนของoutputนี้มีการนำcodeไปรันในcolabเพื่อดูว่าcodeรันได้หรือไม่ทำให้ค่าอาจจะมีการคาดเคลื่อนจากบทความต้นฉบับ</h4>
+          <hr>
+          <h2>จะใช้โมเดลนี้ทำนายการเคลื่อนไหวรายวันได้อย่างไร?</h2>
+          <h3>คุณสามารถใช้โค้ดต่อไปนี้เพื่อทำนายราคาทองคำและให้สัญญาณการซื้อหรือไม่ซื้อ GLD</h3>
+          <h6>
+            <li>โค้ดนี้เป็นตัวอย่างการใช้ Linear Regression ในการทำนายราคาทองคำ (GLD) โดยใช้ข้อมูลราคาเปิด-ปิดของหุ้นตั้งแต่วันที่ 1 มิถุนายน 2008 จนถึงวันปัจจุบัน โดยใช้หลักการ Moving Average เพื่อสร้าง Feature สำหรับการ Train โมเดล โดย S_3 และ S_9 คือ Simple Moving Average ของราคาปิดในช่วงย้อนหลัง 3 และ 9 วัน ตามลำดับ</li>
+            <li>จากนั้นโมเดล Linear Regression จะถูกสร้างขึ้นโดยใช้ S_3 และ S_9 เป็น Feature และราคาปิดปัจจุบันเป็น Target ในการ Train โมเดล และใช้โมเดลนี้ในการทำนายราคาทองคำปัจจุบัน โดยทำการใช้ predict() method ของ Linear Regression model กับข้อมูล S_3 และ S_9 ในวันที่มีข้อมูลล่าสุด และเก็บผลการทำนายไว้ในคอลัมน์ predicted_gold_price</li>
+            <li>โดยผลการทำนายจะถูกนำมาใช้ในการสร้าง signal ซึ่งเป็นเครื่องมือช่วยตัดสินใจว่าจะซื้อหุ้นหรือไม่ โดยการตัดสินใจจะถูกบอกโดยเทียบราคาทองคำที่ทำนายได้ในวันนี้กับราคาที่ทำนายได้ในวันก่อนหน้า หากราคาที่ทำนายได้ในวันนี้มากกว่าราคาที่ทำนายได้ในวันก่อนหน้า จะถือว่าเป็นสัญญาณซื้อ (Buy) แต่ถ้าราคาน้อยกว่าจะถือว่าไม่มีสัญญาณซื้อ (No Position)</li>
+            <li>โดยผลลัพธ์ที่ได้จะเป็น signal และ predicted_gold_price ของวันล่าสุด</li>
+          </h6>
+          <pre><code id="code10" class="python">
+            # import datetime and get today's date
+            import datetime as dt
+            current_date = dt.datetime.now()
+            
+            # Get the data
+            data = yf.download('GLD', '2008-06-01', current_date, auto_adjust=True)
+            data['S_3'] = data['Close'].rolling(window=3).mean()
+            data['S_9'] = data['Close'].rolling(window=9).mean()
+            data = data.dropna()
+            
+            # Forecast the price
+            data['predicted_gold_price'] = linear.predict(data[['S_3', 'S_9']])
+            data['signal'] = np.where(data.predicted_gold_price.shift(1) < data.predicted_gold_price,"Buy","No Position")
+            
+            # Print the forecast
+            data.tail(1)[['signal','predicted_gold_price']].T
+          </code></pre>
+          <button class="code-btn" data-code="#code10"><img src="copy.png" alt="copy10"></button>
+          <h3>Output</h3>
+          <img class="imgoutput" src="output7.jpg" alt="output">
+          <h4>*ในส่วนของoutputนี้มีการนำcodeไปรันในcolabเพื่อดูว่าcodeรันได้หรือไม่ทำให้ค่าอาจจะมีการคาดเคลื่อนจากบทความต้นฉบับ</h4>
+          <hr>
+          <h2>
+            สรุป
+          </h2>
+          <h3>เรื่องนี้เกี่ยวกับการใช้ Machine Learning เพื่อทำนายราคาทองคำ โดยใช้โมเดล Linear Regression ในการทำนายราคา โดยตัวอย่างนี้ใช้ข้อมูลราคาทองคำของตลาดโลกในช่วงระหว่างปี 2008-2020  และแสดงวิธีการสร้างโมเดล Linear Regression และการประเมินผลด้วยค่า R-squared ที่ได้คือ 98.85% ซึ่งแสดงว่าโมเดลสามารถอธิบายข้อมูลได้ดี
+            <li>
+              นอกจากนี้ยังแสดงวิธีการสร้างกลยุทธ์การซื้อขายโดยใช้โมเดล Linear Regression ที่ได้ โดยการคำนวณผลตอบแทนสะสมของกลยุทธ์นี้ และเรียกค่า Sharpe Ratio เพื่อวัดประสิทธิภาพของกลยุทธ์ ซึ่งการประเมินและการสร้างกลยุทธ์นี้สามารถนำไปใช้ได้กับตลาดที่เปลี่ยนแปลงตลอดเวลา
+            </li>
+          </h3>
+          <a href="https://blog.quantinsti.com/gold-price-prediction-using-machine-learning-python/">แหล่งที่มา : Gold Price Prediction: Step By Step Guide Using Python Machine Learning</a>
+          <hr>
+      </article>
+    </section>
+        <div class="profile">
+           <img class = "profile-img" src="ami.jpg" alt="Profile Picture">
+           <p>นางสาว อันติกา อำนรรฆสรเดช
+            <br> รหัสนักศึกษา 63120501037 ชั้นปี 3
+            <br> ภาควิชา เทคโนโลยีมีเดีย เอกพัฒนาเกม
+            <br> มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี 
+           </p>
+           <a class="social-media-icon" href="https://www.facebook.com/aem.untika/"><img src="facebook.png" alt="facebook"></a>
+           <a class="social-text" href="https://www.facebook.com/aem.untika/">Untika Umnunkasoradej</a>
+           <a class="social-media-icon" href="https://www.instagram.com/amiaem._/"><img src="instagram.png" alt="ig"></a>
+           <a class="social-text" href="https://www.instagram.com/amiaem._/">amiaem._</a>
+        </div>
+  </main>
+  <footer>
+    <p>&copy; 2023 My Blog. All rights reserved.</p>
+  </footer>
+</body>
+</html>
